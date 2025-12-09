@@ -3,11 +3,10 @@
 // ============================================
 
 import { useState, useCallback } from 'react';
-import { Alert } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { useAuth } from '../../../core/hooks/useAuth';
 import { resetAuth } from '../../../core/store/authSlice';
-import { VALIDATION, ERROR_MESSAGES, SUCCESS_MESSAGES } from '../../../core/constants/AppConstants';
+import { VALIDATION, ERROR_MESSAGES } from '../../../core/constants/AppConstants';
 
 // Types
 interface SignUpErrors {
@@ -93,32 +92,13 @@ export const useSignUpController = (): UseSignUpControllerReturn => {
       // مسح Redux state (لعدم تسجيل الدخول تلقائياً)
       dispatch(resetAuth());
       
-      // عرض Alert نجاح
-      Alert.alert(
-        'Success',
-        SUCCESS_MESSAGES.REGISTER_SUCCESS,
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              // استدعاء callback للانتقال إلى Login
-              if (onSuccess) {
-                onSuccess();
-              }
-            }
-          }
-        ]
-      );
+      // الانتقال إلى Login بعد نجاح التسجيل
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error: any) {
       const errorMessage = error.message || 'Registration failed';
       setErrors({ email: errorMessage });
-      
-      // عرض Alert مع رسالة الخطأ
-      Alert.alert(
-        'Registration Failed',
-        errorMessage,
-        [{ text: 'OK' }]
-      );
     }
   }, [email, password, fullName, validateForm, register, dispatch]);
 

@@ -3,7 +3,6 @@
 // ============================================
 
 import { useState, useCallback } from 'react';
-import { Alert } from 'react-native';
 import { useAuth } from '../../../core/hooks/useAuth';
 import { VALIDATION, ERROR_MESSAGES } from '../../../core/constants/AppConstants';
 
@@ -67,13 +66,6 @@ export const useLoginController = (): UseLoginControllerReturn => {
     } catch (error: any) {
       const errorMessage = error.message || ERROR_MESSAGES.INVALID_CREDENTIALS;
       setErrors({ password: errorMessage });
-      
-      // عرض Alert مع رسالة الخطأ
-      Alert.alert(
-        'Login Failed',
-        errorMessage,
-        [{ text: 'OK' }]
-      );
     }
   }, [email, password, rememberMe, validateForm, login]);
 

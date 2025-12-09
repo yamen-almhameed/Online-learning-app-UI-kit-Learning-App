@@ -38,6 +38,11 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ navigation }) => {
   }, [hasCompletedOnboarding]);
 
   useEffect(() => {
+    // حفظ أن المستخدم قد رأى Splash Screen
+    import('@react-native-async-storage/async-storage').then(({ default: AsyncStorage }) => {
+      AsyncStorage.setItem('has_seen_splash', 'true');
+    });
+
     startAnimations();
 
     // Navigate after delay

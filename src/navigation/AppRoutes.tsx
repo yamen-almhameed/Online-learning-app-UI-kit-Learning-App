@@ -137,17 +137,44 @@ const MainTabs = () => {
 // ============================================
 // 🔐 Auth Navigator (قبل تسجيل الدخول)
 // ============================================
-const AuthNavigator = () => (
-  <AuthStack.Navigator
-    initialRouteName={ROUTES.SPLASH}
-    screenOptions={{ headerShown: false, animation: 'slide_from_right' }}
-  >
-    <AuthStack.Screen name="Splash" component={SplashScreen as any} />
-    <AuthStack.Screen name="Onboarding" component={OnboardingScreen as any} />
-    <AuthStack.Screen name="Login" component={LoginScreen as any} />
-    <AuthStack.Screen name="SignUp" component={SignUpScreen as any} />
-  </AuthStack.Navigator>
-);
+const AuthNavigator = () => {
+  const [hasSeenSplash, setHasSeenSplash] = React.useState(false);
+  const [initialRoute, setInitialRoute] = React.useState<string>(ROUTES.SPLASH);
+
+  React.useEffect(() => {
+    // التحقق من AsyncStorage لمعرفة إذا كان المستخدم قد رأى Splash من قبل
+    AsyncStorage.getItem('has_seen_splash').then(value => {
+      if (value === 'true') {
+        // إذا رأى Splash من قبل، ابدأ مباشرة من Login أو Onboarding
+        AsyncStorage.getItem('onboarding_completed').then(onboardingValue => {
+          setInitialRoute(onboardingValue === 'true' ? ROUTES.LOGIN : ROUTES.ONBOARDING);
+          setHasSeenSplash(true);
+        });
+      } else {
+        // أول مرة - ابدأ من Splash
+        setInitialRoute(ROUTES.SPLASH);
+        setHasSeenSplash(true);
+      }
+    });
+  }, []);
+
+  if (!hasSeenSplash) {
+    // انتظر حتى نعرف الـ initial route
+    return null;
+  }
+
+  return (
+    <AuthStack.Navigator
+      initialRouteName={initialRoute}
+      screenOptions={{ headerShown: false, animation: 'slide_from_right' }}
+    >
+      <AuthStack.Screen name="Splash" component={SplashScreen as any} />
+      <AuthStack.Screen name="Onboarding" component={OnboardingScreen as any} />
+      <AuthStack.Screen name="Login" component={LoginScreen as any} />
+      <AuthStack.Screen name="SignUp" component={SignUpScreen as any} />
+    </AuthStack.Navigator>
+  );
+};
 
 export const AppRoutes = () => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -195,11 +222,12 @@ export const AppRoutes = () => {
             })
           );
         } else {
-          console.log('🔴 [AppRoutes] المستخدم غير مسجل دخول - الانتقال إلى AUTH');
+          // عند تسجيل الخروج، انتقل مباشرة إلى Login (وليس AUTH الذي يبدأ بـ Splash)
+          console.log('🔴 [AppRoutes] المستخدم غير مسجل دخول - الانتقال إلى Login');
           navigationRef.dispatch(
             CommonActions.reset({
               index: 0,
-              routes: [{ name: ROUTES.AUTH }],
+              routes: [{ name: ROUTES.AUTH, params: { screen: ROUTES.LOGIN } }],
             })
           );
         }
