@@ -89,6 +89,10 @@ src/
 - Android: استخدم IP جهاز الكمبيوتر بدلاً من localhost
 - iOS: استخدم localhost أو IP جهاز الكمبيوتر
 
+## حل المشاكل
+
+إذا واجهت مشاكل في Debugger أو Timeout، راجع ملف [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) للحلول الشائعة.
+
 ## المساهمة
 
 نرحب بمساهماتكم! يرجى فتح Issue أو Pull Request.
