@@ -92,13 +92,28 @@ export const useSignUpController = (): UseSignUpControllerReturn => {
       // مسح Redux state (لعدم تسجيل الدخول تلقائياً)
       dispatch(resetAuth());
       
-      // الانتقال إلى Login بعد نجاح التسجيل
+      // الانتقال إلى Login بعد نجاح التسجيل فقط
       if (onSuccess) {
         onSuccess();
       }
     } catch (error: any) {
-      const errorMessage = error.message || 'Registration failed';
+      // استخراج رسالة الخطأ من الـ API response
+      let errorMessage = 'Registration failed';
+      
+      if (error?.message) {
+        errorMessage = error.message;
+      } else if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error?.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
+      // عرض رسالة الخطأ في حقل email (كحقل عام للأخطاء)
       setErrors({ email: errorMessage });
+      
+      // لا ننتقل إلى Login عند الفشل - فقط نعرض الخطأ
     }
   }, [email, password, fullName, validateForm, register, dispatch]);
 

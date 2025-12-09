@@ -14,6 +14,7 @@ import { useNavigationState, ROUTES } from '../../../navigation';
 import { SplashScreenProps } from '../../../navigation/types';
 import { Colors } from '../../../core/theme/colors';
 import { SplashImages } from '../../../shared/assets/image';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -39,9 +40,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ navigation }) => {
 
   useEffect(() => {
     // حفظ أن المستخدم قد رأى Splash Screen
-    import('@react-native-async-storage/async-storage').then(({ default: AsyncStorage }) => {
-      AsyncStorage.setItem('has_seen_splash', 'true');
-    });
+    AsyncStorage.setItem('has_seen_splash', 'true');
 
     startAnimations();
 

@@ -88,7 +88,20 @@ export const registerAsync = createAsyncThunk(
       
       return response;
     } catch (error: any) {
-      return rejectWithValue(error.message || 'Registration failed');
+      // استخراج رسالة الخطأ من الـ API response
+      let errorMessage = 'Registration failed';
+      
+      if (error?.message) {
+        errorMessage = error.message;
+      } else if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error?.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
+      return rejectWithValue(errorMessage);
     }
   }
 );
