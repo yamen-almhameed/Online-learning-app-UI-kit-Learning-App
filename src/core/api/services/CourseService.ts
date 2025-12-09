@@ -214,7 +214,9 @@ export const CourseService = {
       // apiClient interceptor already extracts data.data, so response.data is SearchResponse
       const apiCourses = response.data?.courses || [];
       if (!Array.isArray(apiCourses)) {
-        console.error('❌ [CourseService] getCourses: courses is not an array', apiCourses);
+        if (__DEV__) {
+          console.error('getCourses: courses is not an array');
+        }
         return {
           courses: [],
           total: 0,
@@ -232,7 +234,9 @@ export const CourseService = {
         totalPages: Math.ceil(courses.length / (filters?.limit || 10)),
       };
     } catch (error) {
-      console.error('❌ [CourseService] Error in getCourses:', error);
+      if (__DEV__) {
+        console.error('Error in getCourses:', error);
+      }
       return {
         courses: [],
         total: 0,
@@ -251,12 +255,16 @@ export const CourseService = {
       // apiClient interceptor already extracts data.data, so response.data is SearchResponse
       const apiCourses = response.data?.courses || [];
       if (!Array.isArray(apiCourses)) {
-        console.error('❌ [CourseService] getTrendingCourses: courses is not an array', apiCourses);
+        if (__DEV__) {
+          console.error('getTrendingCourses: courses is not an array');
+        }
         return [];
       }
       return apiCourses.map(mapApiCourseToCourse).filter(Boolean);
     } catch (error) {
-      console.error('❌ [CourseService] Error in getTrendingCourses:', error);
+      if (__DEV__) {
+        console.error('Error in getTrendingCourses:', error);
+      }
       return [];
     }
   },
@@ -270,12 +278,16 @@ export const CourseService = {
       // apiClient interceptor already extracts data.data, so response.data is SearchResponse
       const apiCourses = response.data?.courses || [];
       if (!Array.isArray(apiCourses)) {
-        console.error('❌ [CourseService] getPopularCourses: courses is not an array', apiCourses);
+        if (__DEV__) {
+          console.error('getPopularCourses: courses is not an array');
+        }
         return [];
       }
       return apiCourses.map(mapApiCourseToCourse).filter(Boolean);
     } catch (error) {
-      console.error('❌ [CourseService] Error in getPopularCourses:', error);
+      if (__DEV__) {
+        console.error('Error in getPopularCourses:', error);
+      }
       return [];
     }
   },
@@ -287,23 +299,13 @@ export const CourseService = {
     const url = ENDPOINTS.COURSE_DETAILS.replace(':id', courseId);
     const response = await api.get<any>(url);
     
-    // apiClient interceptor already extracts data.data, so response.data should be { course: {...}, isEnrolled: ..., progress: ... }
     const apiData = (response as any).data || response.data;
-    
-    console.log('🔍 [CourseService] Raw API response data:', JSON.stringify(apiData, null, 2));
-    
-    // Extract course from the response (it's nested in data.course)
     const courseData = apiData.course || apiData;
     
-    console.log('🔍 [CourseService] Extracted courseData:', {
-      hasId: !!(courseData?._id || courseData?.id),
-      hasChapters: !!courseData?.chapters,
-      chaptersType: Array.isArray(courseData?.chapters) ? 'array' : typeof courseData?.chapters,
-      chaptersLength: Array.isArray(courseData?.chapters) ? courseData.chapters.length : 0,
-    });
-    
     if (!courseData || (!courseData._id && !courseData.id)) {
-      console.error('❌ [CourseService] Invalid course data:', courseData);
+      if (__DEV__) {
+        console.error('Invalid course data received from API');
+      }
       throw new Error('Invalid course data received from API');
     }
     
@@ -336,11 +338,6 @@ export const CourseService = {
       };
     }) : [];
     
-    console.log('🔍 [CourseService] Final chapters array:', {
-      length: chapters.length,
-      chapters: chapters.map(c => ({ id: c.id, title: c.title })),
-    });
-    
     const courseDetails: CourseDetails = {
       ...baseCourse,
       chapters: Array.isArray(chapters) ? chapters : [],
@@ -359,12 +356,6 @@ export const CourseService = {
       })) : [],
     };
     
-    console.log('✅ [CourseService] Returning courseDetails:', {
-      id: courseDetails.id,
-      title: courseDetails.title,
-      chaptersCount: courseDetails.chapters.length,
-    });
-    
     return courseDetails;
   },
 
@@ -378,7 +369,9 @@ export const CourseService = {
       const response = await api.get<Chapter[]>(url, { timeout: 30000 });
       return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
-      console.error('❌ [CourseService] Error in getCourseLessons:', error);
+      if (__DEV__) {
+        console.error('Error in getCourseLessons:', error);
+      }
       return [];
     }
   },
@@ -393,7 +386,9 @@ export const CourseService = {
       const response = await api.get<Review[]>(url, { params: { page }, timeout: 30000 });
       return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
-      console.error('❌ [CourseService] Error in getCourseReviews:', error);
+      if (__DEV__) {
+        console.error('Error in getCourseReviews:', error);
+      }
       return [];
     }
   },
@@ -408,7 +403,9 @@ export const CourseService = {
       const response = await api.post<{ success: boolean; message: string }>(url, {}, { timeout: 30000 });
       return (response as any).data || { success: false, message: 'Unknown error' };
     } catch (error) {
-      console.error('❌ [CourseService] Error in enrollCourse:', error);
+      if (__DEV__) {
+        console.error('Error in enrollCourse:', error);
+      }
       return { success: false, message: 'Failed to enroll in course' };
     }
   },
@@ -423,7 +420,9 @@ export const CourseService = {
       const response = await api.post<{ success: boolean; message: string }>(url, {}, { timeout: 30000 });
       return (response as any).data || { success: false, message: 'Unknown error' };
     } catch (error) {
-      console.error('❌ [CourseService] Error in addToHistory:', error);
+      if (__DEV__) {
+        console.error('Error in addToHistory:', error);
+      }
       return { success: false, message: 'Failed to add to history' };
     }
   },
@@ -437,7 +436,9 @@ export const CourseService = {
       const response = await api.get<UserCourse[]>(ENDPOINTS.MY_COURSES, { timeout: 30000 });
       return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
-      console.error('❌ [CourseService] Error in getMyCourses:', error);
+      if (__DEV__) {
+        console.error('Error in getMyCourses:', error);
+      }
       return [];
     }
   },
@@ -452,7 +453,9 @@ export const CourseService = {
       const response = await api.post<{ progress: number }>(url, { lessonId }, { timeout: 30000 });
       return response.data || { progress: 0 };
     } catch (error) {
-      console.error('❌ [CourseService] Error in updateProgress:', error);
+      if (__DEV__) {
+        console.error('Error in updateProgress:', error);
+      }
       return { progress: 0 };
     }
   },
@@ -470,7 +473,9 @@ export const CourseService = {
       );
       return response.data || { isBookmarked: false };
     } catch (error) {
-      console.error('❌ [CourseService] Error in toggleBookmark:', error);
+      if (__DEV__) {
+        console.error('Error in toggleBookmark:', error);
+      }
       return { isBookmarked: false };
     }
   },
@@ -480,59 +485,32 @@ export const CourseService = {
    */
   searchCourses: async (query: string): Promise<Course[]> => {
     try {
-      console.log('🔍 [CourseService] Searching courses with query:', query);
-      
       const response = await api.get<SearchResponse>(ENDPOINTS.SEARCH, { 
         params: { q: query },
-        timeout: 30000, // 30 seconds timeout
+        timeout: 30000,
       });
       
-      console.log('✅ [CourseService] Search response received:', {
-        hasData: !!response.data,
-        dataType: typeof response.data,
-        isArray: Array.isArray(response.data),
-        keys: response.data && typeof response.data === 'object' ? Object.keys(response.data) : null,
-      });
-      
-      // Handle different response structures
       let apiCourses: ApiCourse[] = [];
       
-      // Case 1: response.data is an array directly (most common for search)
       if (Array.isArray(response.data)) {
-        console.log('🔵 [CourseService] Response is direct array');
         apiCourses = response.data;
-      }
-      // Case 2: response.data has courses property
-      else if (response.data && typeof response.data === 'object' && 'courses' in response.data) {
-        console.log('🔵 [CourseService] Response has courses property');
+      } else if (response.data && typeof response.data === 'object' && 'courses' in response.data) {
         const coursesData = (response.data as SearchResponse).courses;
         apiCourses = Array.isArray(coursesData) ? coursesData : [];
-      }
-      // Case 3: response.data.data has courses (nested)
-      else if (response.data && typeof response.data === 'object' && 'data' in response.data) {
+      } else if (response.data && typeof response.data === 'object' && 'data' in response.data) {
         const nestedData = (response.data as any).data;
         if (Array.isArray(nestedData)) {
-          console.log('🔵 [CourseService] Response.data.data is array');
           apiCourses = nestedData;
         } else if (nestedData && typeof nestedData === 'object' && 'courses' in nestedData) {
-          console.log('🔵 [CourseService] Response.data.data has courses');
           const coursesData = nestedData.courses;
           apiCourses = Array.isArray(coursesData) ? coursesData : [];
-        } else if (nestedData && typeof nestedData === 'object' && Array.isArray(nestedData)) {
-          console.log('🔵 [CourseService] Response.data.data is array (nested)');
-          apiCourses = nestedData;
         }
-      }
-      // Case 4: response.data might be the courses array wrapped in another structure
-      else if (response.data && typeof response.data === 'object') {
-        console.log('🔵 [CourseService] Checking response.data for array properties');
-        // Check if any property is an array of courses
+      } else if (response.data && typeof response.data === 'object') {
         const dataObj = response.data as any;
         for (const key in dataObj) {
           if (Object.prototype.hasOwnProperty.call(dataObj, key)) {
             const value = dataObj[key];
             if (Array.isArray(value) && value.length > 0 && value[0] && typeof value[0] === 'object' && '_id' in value[0]) {
-              console.log(`🔵 [CourseService] Found courses array in property: ${key}`);
               apiCourses = value;
               break;
             }
@@ -541,20 +519,16 @@ export const CourseService = {
       }
       
       if (!Array.isArray(apiCourses)) {
-        console.error('❌ [CourseService] searchCourses: courses is not an array', {
-          apiCourses,
-          responseData: response.data,
-        });
+        if (__DEV__) {
+          console.error('searchCourses: courses is not an array');
+        }
         return [];
       }
       
-      console.log(`✅ [CourseService] Found ${apiCourses.length} courses`);
-      const mappedCourses = apiCourses.map(mapApiCourseToCourse).filter(Boolean);
-      console.log(`✅ [CourseService] Mapped ${mappedCourses.length} courses successfully`);
-      
-      return mappedCourses;
+      return apiCourses.map(mapApiCourseToCourse).filter(Boolean);
     } catch (error: any) {
-      console.error('❌ [CourseService] Error in searchCourses:', {
+      if (__DEV__) {
+        console.error('Error in searchCourses:', {
         message: error?.message,
         code: error?.code,
         response: error?.response?.data,
@@ -580,7 +554,9 @@ export const CourseService = {
       }
       return apiCourses.map(mapApiCourseToCourse).filter(Boolean);
     } catch (error) {
-      console.error('❌ [CourseService] Error in getCoursesByCategory:', error);
+      if (__DEV__) {
+        console.error('Error in getCoursesByCategory:', error);
+      }
       return [];
     }
   },
@@ -597,7 +573,9 @@ export const CourseService = {
       );
       return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
-      console.error('❌ [CourseService] Error in getCategories:', error);
+      if (__DEV__) {
+        console.error('Error in getCategories:', error);
+      }
       return [];
     }
   },

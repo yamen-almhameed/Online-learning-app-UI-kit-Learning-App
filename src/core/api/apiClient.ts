@@ -31,13 +31,7 @@ const apiClient: AxiosInstance = axios.create({
     'Content-Type': 'application/json', // نوع البيانات المرسلة
     'Accept': 'application/json', // نوع البيانات المتوقعة
   },
-  // Add additional timeout settings
-  validateStatus: (status) => status < 500, // Don't throw on 4xx errors
-  // Additional timeout configuration for better handling
-  httpAgent: undefined, // Let axios use default agent
-  httpsAgent: undefined, // Let axios use default agent
-  // Signal timeout for better cancellation support
-  signal: undefined, // Can be set per request if needed
+  validateStatus: (status) => status < 500,
 });
 
 // ============================================
@@ -62,15 +56,6 @@ apiClient.interceptors.request.use(
         config.headers['Accept-Language'] = language;
       }
       
-      // Log request in development
-      if (__DEV__) {
-        console.log('🚀 API Request:', {
-          url: config.url,
-          method: config.method,
-          data: config.data,
-        });
-      }
-      
       return config;
     } catch (error) {
       return Promise.reject(error);
@@ -84,68 +69,35 @@ apiClient.interceptors.request.use(
 // Response Interceptor
 apiClient.interceptors.response.use(
   (response: AxiosResponse): AxiosResponse => {
-    // Log response in development
-    if (__DEV__) {
-      console.log('✅ API Response:', {
-        url: response.config.url,
-        status: response.status,
-        data: response.data,
-      });
-    }
-    
-    // التحقق من أن الـ response هو JSON وليس HTML
     const data = response.data;
+    
     if (typeof data === 'string' && data.trim().startsWith('<!DOCTYPE')) {
-      console.error('❌ API Error: السيرفر يرجع HTML بدلاً من JSON');
-      console.error('❌ تأكد أن السيرفر يعمل على:', response.config.baseURL);
+      if (__DEV__) {
+        console.error('Server returned HTML instead of JSON:', response.config.baseURL);
+      }
       throw new Error('Server returned HTML instead of JSON. Please check if the server is running.');
     }
     
-    // إذا كان الـ response يحتوي على data property (من ApiResponse)
-    // مثال: { success: true, message: "...", data: { courses: [...] } }
     if (data && typeof data === 'object' && 'data' in data) {
-      console.log('🔵 [apiClient] استخراج data من response.data.data');
       const extractedData = data.data;
       
-      // إذا كان extractedData يحتوي على data مرة أخرى (nested)
       if (extractedData && typeof extractedData === 'object' && 'data' in extractedData) {
-        console.log('🔵 [apiClient] استخراج data من response.data.data.data (nested)');
         return {
           ...response,
           data: extractedData.data,
         };
       }
       
-      // إرجاع AxiosResponse مع data المستخرجة
       return {
         ...response,
         data: extractedData,
       };
     }
     
-    // إذا كان الـ response مباشر (courses في الجذر أو array مباشر)
-    // أو إذا كان response.data هو array مباشر (مثل search results)
-    if (Array.isArray(data)) {
-      console.log('🔵 [apiClient] Response.data is direct array');
-      return response;
-    }
-    
-    // إذا كان الـ response مباشر (object في الجذر)
     return response;
   },
   async (error: AxiosError<ApiError>) => {
-    // Log error in development
-    if (__DEV__) {
-      console.log('❌ API Error:', {
-        url: error.config?.url,
-        status: error.response?.status,
-        message: error.message,
-        code: error.code,
-        data: error.response?.data,
-      });
-    }
-    
-    // Handle timeout errors - comprehensive timeout error detection
+    // Handle timeout errors
     const isTimeoutError = 
       error.code === 'ECONNABORTED' || 
       error.code === 'ETIMEDOUT' ||
@@ -169,7 +121,9 @@ apiClient.interceptors.response.use(
               'Request Timeout',
       };
       
-      console.error('❌ Request Timeout:', timeoutDetails);
+      if (__DEV__) {
+        console.error('Request Timeout:', timeoutDetails);
+      }
       
       // Provide more specific error messages based on timeout type
       let userMessage = 'Request timeout. The server is taking too long to respond.';
@@ -205,15 +159,13 @@ apiClient.interceptors.response.use(
     
     // Handle network error
     if (!error.response) {
-      // Network Error - عادة يحدث عندما:
-      // 1. السيرفر غير شغال
-      // 2. استخدام localhost على جهاز حقيقي (يجب استخدام IP)
-      // 3. مشكلة في الاتصال بالشبكة
-      console.error('❌ Network Error Details:');
-      console.error('  - URL:', (error.config?.baseURL || '') + (error.config?.url || ''));
-      console.error('  - Message:', error.message);
-      console.error('  - Code:', error.code);
-      console.error('  - إذا كنت على جهاز حقيقي، تأكد من استخدام IP جهاز الكمبيوتر بدلاً من localhost');
+      if (__DEV__) {
+        console.error('Network Error:', {
+          url: (error.config?.baseURL || '') + (error.config?.url || ''),
+          message: error.message,
+          code: error.code,
+        });
+      }
       
       return Promise.reject({
         message: 'Network error. Please check your connection. If using a real device, use your computer IP instead of localhost.',

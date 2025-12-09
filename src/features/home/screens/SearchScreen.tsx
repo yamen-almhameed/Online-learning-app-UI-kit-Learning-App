@@ -87,15 +87,11 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ route, navigation }) => {
     // Debounce search - only search if query is at least 2 characters
     timeoutId = setTimeout(async () => {
       const trimmedQuery = searchQuery.trim();
-      // Don't search if screen is not ready yet
       if (trimmedQuery.length >= 2 && isMounted && isScreenReady) {
-        console.log('🔍 [SearchScreen] Starting search for:', trimmedQuery);
         setLoading(true);
         try {
-          // Add timeout protection
           const timeoutPromise = new Promise<Course[]>((_, reject) => {
             setTimeout(() => {
-              console.error('⏱️ [SearchScreen] Search timeout after 30 seconds');
               reject(new Error('Search timeout'));
             }, 30000);
           });
@@ -103,19 +99,17 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ route, navigation }) => {
           const searchPromise = CourseService.searchCourses(trimmedQuery);
           const searchResults = await Promise.race([searchPromise, timeoutPromise]);
           
-          console.log('✅ [SearchScreen] Search completed, results:', searchResults?.length || 0);
-          
           if (isMounted) {
             const safeResults = Array.isArray(searchResults) ? searchResults : [];
             setResults(safeResults);
-            console.log('✅ [SearchScreen] Results set:', safeResults.length);
           }
         } catch (error: any) {
-          console.error('❌ [SearchScreen] Error searching courses:', {
-            message: error?.message,
-            code: error?.code,
-            error,
-          });
+          if (__DEV__) {
+            console.error('Error searching courses:', {
+              message: error?.message,
+              code: error?.code,
+            });
+          }
           if (isMounted) {
             setResults([]);
             setLoading(false);
@@ -123,7 +117,6 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ route, navigation }) => {
         } finally {
           if (isMounted) {
             setLoading(false);
-            console.log('✅ [SearchScreen] Loading set to false');
           }
         }
       } else if (isMounted) {
@@ -154,17 +147,20 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ route, navigation }) => {
         navigation.navigate(ROUTES.SUBSCRIPTION_PLANS);
       }
     } catch (error) {
-      console.error('Error in handleCoursePress:', error);
+      if (__DEV__) {
+        console.error('Error in handleCoursePress:', error);
+      }
     }
   };
 
   // Handle bookmark press
   const handleBookmarkPress = (courseId: string) => {
     try {
-      console.log('Bookmark course:', courseId);
       // TODO: Implement bookmark functionality
     } catch (error) {
-      console.error('Error in handleBookmarkPress:', error);
+      if (__DEV__) {
+        console.error('Error in handleBookmarkPress:', error);
+      }
     }
   };
 
@@ -178,7 +174,9 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ route, navigation }) => {
         setSearchQuery(''); // Clear search when selecting category
       }
     } catch (error) {
-      console.error('Error in handleCategoryPress:', error);
+      if (__DEV__) {
+        console.error('Error in handleCategoryPress:', error);
+      }
     }
   };
 
@@ -222,7 +220,9 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ route, navigation }) => {
             setResults(Array.isArray(categoryResults) ? categoryResults : []);
           }
         } catch (error) {
-          console.error('Error loading courses by category:', error);
+          if (__DEV__) {
+            console.error('Error loading courses by category:', error);
+          }
           if (isMounted) {
             setResults([]);
           }
@@ -278,7 +278,9 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ route, navigation }) => {
         </View>
       );
     } catch (error) {
-      console.error('Error rendering course:', error, item);
+      if (__DEV__) {
+        console.error('Error rendering course:', error);
+      }
       return null;
     }
   };

@@ -95,7 +95,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         setTrendingCourses(Array.isArray(trending) ? trending : []);
         setPopularCourses(Array.isArray(popular) ? popular : []);
       } catch (error) {
-        console.error('❌ [HomeScreen] Error loading initial courses:', error);
+        if (__DEV__) {
+          console.error('Error loading initial courses:', error);
+        }
         if (timeoutId) {
           clearTimeout(timeoutId);
         }
@@ -163,7 +165,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             setFilteredCourses(Array.isArray(results) ? results : []);
           }
         } catch (error) {
-          console.error('Error loading courses by category:', error);
+          if (__DEV__) {
+            console.error('Error loading courses by category:', error);
+          }
           if (isMounted) {
             setFilteredCourses([]);
           }
@@ -200,7 +204,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         setSearchQuery('');
       }
     } catch (error) {
-      console.error('Error in handleCategoryPress:', error);
+      if (__DEV__) {
+        console.error('Error in handleCategoryPress:', error);
+      }
     }
   };
 
@@ -237,84 +243,39 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
       const hasActiveSubscription = user?.subscription?.isActive === true;
       
       if (hasActiveSubscription) {
-        // User has active subscription, navigate to course player
-        console.log('🔄 [HomeScreen] Navigating to COURSE_PLAYER:', course.id);
         navigation.navigate(ROUTES.COURSE_PLAYER, { courseId: course.id });
       } else {
-        // User doesn't have active subscription, show subscription plans
-        console.log('🔄 [HomeScreen] Navigating to SUBSCRIPTION_PLANS');
-        console.log('🔄 [HomeScreen] Route constant:', ROUTES.SUBSCRIPTION_PLANS);
-        
-        // Use CommonActions.navigate directly for more reliable navigation
         try {
-          console.log('🔄 [HomeScreen] Using CommonActions.navigate...');
           navigation.dispatch(
             CommonActions.navigate({
               name: ROUTES.SUBSCRIPTION_PLANS,
             })
           );
-          console.log('✅ [HomeScreen] CommonActions.navigate dispatched successfully');
-          
-          // Verify navigation happened after a short delay
-          setTimeout(() => {
-            try {
-              const state = navigation.getState();
-              const currentRoute = state?.routes[state?.index || 0]?.name;
-              console.log('🔍 [HomeScreen] Current route after navigation:', currentRoute);
-              console.log('🔍 [HomeScreen] Expected route:', ROUTES.SUBSCRIPTION_PLANS);
-              
-              if (currentRoute !== ROUTES.SUBSCRIPTION_PLANS) {
-                console.warn('⚠️ [HomeScreen] Navigation may have failed, trying navigationRef');
-                if (navigationRef?.isReady()) {
-                  (navigationRef as any).navigate(ROUTES.SUBSCRIPTION_PLANS);
-                }
-              } else {
-                console.log('✅ [HomeScreen] Navigation verified successfully!');
-              }
-            } catch (verifyErr) {
-              console.error('❌ [HomeScreen] Error verifying navigation:', verifyErr);
-            }
-          }, 300);
         } catch (navErr: any) {
-          console.error('❌ [HomeScreen] CommonActions.navigate error:', navErr);
-          // Fallback to regular navigate
           try {
-            console.log('🔄 [HomeScreen] Trying regular navigation.navigate...');
             navigation.navigate(ROUTES.SUBSCRIPTION_PLANS);
           } catch (navErr2: any) {
-            console.error('❌ [HomeScreen] Regular navigate also failed:', navErr2);
-            // Last resort: use navigationRef
             if (navigationRef?.isReady()) {
-              console.log('🔄 [HomeScreen] Using navigationRef as last resort');
               (navigationRef as any).navigate(ROUTES.SUBSCRIPTION_PLANS);
             }
           }
         }
       }
     } catch (navError: any) {
-      console.error('❌ [HomeScreen] Outer catch - Navigation error:', navError);
-      console.error('❌ [HomeScreen] Error message:', navError?.message);
+      if (__DEV__) {
+        console.error('Navigation error:', navError);
+      }
     }
   };
 
   // Navigate to notifications
   const handleNotificationPress = () => {
-    try {
-      // TODO: Navigate to notifications screen
-      console.log('Notification pressed');
-    } catch (error) {
-      console.error('Error in handleNotificationPress:', error);
-    }
+    // TODO: Navigate to notifications screen
   };
 
   // Navigate to all courses
   const handleSeeAll = (type: 'trending' | 'popular') => {
-    try {
-      // TODO: Navigate to courses list screen
-      console.log('See all', type);
-    } catch (error) {
-      console.error('Error in handleSeeAll:', error);
-    }
+    // TODO: Navigate to courses list screen
   };
 
   // Render category item
@@ -328,12 +289,7 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   // Handle bookmark press
   const handleBookmarkPress = (courseId: string) => {
-    try {
-      console.log('Bookmark course:', courseId);
-      // TODO: Implement bookmark functionality
-    } catch (error) {
-      console.error('Error in handleBookmarkPress:', error);
-    }
+    // TODO: Implement bookmark functionality
   };
 
   // Render course
@@ -356,7 +312,9 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         />
       );
     } catch (error) {
-      console.error('Error rendering course:', error, item);
+      if (__DEV__) {
+        console.error('Error rendering course:', error);
+      }
       return null;
     }
   };
@@ -423,34 +381,10 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
           editable={false}
           onPress={() => {
             try {
-              console.log('🔄 [HomeScreen] Navigating to SEARCH');
-              console.log('🔄 [HomeScreen] Route name:', ROUTES.SEARCH);
-              console.log('🔄 [HomeScreen] Navigation object exists:', !!navigation);
-              console.log('🔄 [HomeScreen] navigation.navigate exists:', !!navigation?.navigate);
-              
               if (navigation && typeof navigation.navigate === 'function') {
                 try {
-                  // Try navigate first
                   navigation.navigate(ROUTES.SEARCH, { initialQuery: '' });
-                  console.log('✅ [HomeScreen] navigation.navigate called');
-                  
-                  // Verify navigation happened after a short delay
-                  setTimeout(() => {
-                    const currentRoute = navigation.getState()?.routes[navigation.getState()?.index || 0]?.name;
-                    console.log('🔍 [HomeScreen] Current route after navigation:', currentRoute);
-                    if (currentRoute !== ROUTES.SEARCH) {
-                      console.warn('⚠️ [HomeScreen] Navigation may have failed, trying CommonActions');
-                      navigation.dispatch(
-                        CommonActions.navigate({
-                          name: ROUTES.SEARCH,
-                          params: { initialQuery: '' },
-                        })
-                      );
-                    }
-                  }, 200);
                 } catch (navErr) {
-                  console.error('❌ [HomeScreen] Error in navigation.navigate:', navErr);
-                  // Try CommonActions as fallback
                   navigation.dispatch(
                     CommonActions.navigate({
                       name: ROUTES.SEARCH,
@@ -458,27 +392,20 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                     })
                   );
                 }
-              } else {
-                console.error('❌ [HomeScreen] Navigation object is invalid');
-                // Try using navigationRef as fallback
-                if (navigationRef?.isReady()) {
-                  console.log('🔄 [HomeScreen] Using navigationRef fallback');
-                  (navigationRef as any).navigate(ROUTES.SEARCH, { initialQuery: '' });
-                } else {
-                  console.error('❌ [HomeScreen] navigationRef is not ready');
-                }
+              } else if (navigationRef?.isReady()) {
+                (navigationRef as any).navigate(ROUTES.SEARCH, { initialQuery: '' });
               }
             } catch (navError: any) {
-              console.error('❌ [HomeScreen] Navigation error to search:', navError);
-              console.error('❌ [HomeScreen] Error message:', navError?.message);
-              console.error('❌ [HomeScreen] Error stack:', navError?.stack);
-              // Try using navigationRef as fallback
+              if (__DEV__) {
+                console.error('Navigation error to search:', navError);
+              }
               if (navigationRef?.isReady()) {
-                console.log('🔄 [HomeScreen] Using navigationRef fallback after error');
                 try {
                   (navigationRef as any).navigate(ROUTES.SEARCH, { initialQuery: '' });
                 } catch (refError) {
-                  console.error('❌ [HomeScreen] navigationRef also failed:', refError);
+                  if (__DEV__) {
+                    console.error('NavigationRef failed:', refError);
+                  }
                 }
               }
             }
@@ -630,35 +557,11 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               ]}
               onPress={() => {
                 try {
-                  console.log('🔄 [HomeScreen] Navigating to SEARCH from menu');
-                  console.log('🔄 [HomeScreen] Route name:', ROUTES.SEARCH);
-                  
                   if (navigation && typeof navigation.navigate === 'function') {
                     try {
-                      // Try navigate first
                       navigation.navigate(ROUTES.SEARCH, { initialQuery: '' });
-                      console.log('✅ [HomeScreen] navigation.navigate called from menu');
-                      
-                      // Close menu after navigation starts
                       setTimeout(() => setShowMenu(false), 100);
-                      
-                      // Verify navigation happened after a short delay
-                      setTimeout(() => {
-                        const currentRoute = navigation.getState()?.routes[navigation.getState()?.index || 0]?.name;
-                        console.log('🔍 [HomeScreen] Current route after navigation:', currentRoute);
-                        if (currentRoute !== ROUTES.SEARCH) {
-                          console.warn('⚠️ [HomeScreen] Navigation may have failed, trying CommonActions');
-                          navigation.dispatch(
-                            CommonActions.navigate({
-                              name: ROUTES.SEARCH,
-                              params: { initialQuery: '' },
-                            })
-                          );
-                        }
-                      }, 200);
                     } catch (navErr) {
-                      console.error('❌ [HomeScreen] Error in navigation.navigate:', navErr);
-                      // Try CommonActions as fallback
                       navigation.dispatch(
                         CommonActions.navigate({
                           name: ROUTES.SEARCH,
@@ -667,28 +570,23 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                       );
                       setTimeout(() => setShowMenu(false), 100);
                     }
+                  } else if (navigationRef?.isReady()) {
+                    (navigationRef as any).navigate(ROUTES.SEARCH, { initialQuery: '' });
+                    setTimeout(() => setShowMenu(false), 100);
                   } else {
-                    console.error('❌ [HomeScreen] Navigation object is invalid');
-                    // Try using navigationRef as fallback
-                    if (navigationRef?.isReady()) {
-                      console.log('🔄 [HomeScreen] Using navigationRef fallback');
-                      (navigationRef as any).navigate(ROUTES.SEARCH, { initialQuery: '' });
-                      setTimeout(() => setShowMenu(false), 100);
-                    } else {
-                      console.error('❌ [HomeScreen] navigationRef is not ready');
-                      setShowMenu(false);
-                    }
+                    setShowMenu(false);
                   }
                 } catch (navError: any) {
-                  console.error('❌ [HomeScreen] Navigation error to search:', navError);
-                  console.error('❌ [HomeScreen] Error message:', navError?.message);
-                  // Try using navigationRef as fallback
+                  if (__DEV__) {
+                    console.error('Navigation error to search:', navError);
+                  }
                   if (navigationRef?.isReady()) {
-                    console.log('🔄 [HomeScreen] Using navigationRef fallback after error');
                     try {
                       (navigationRef as any).navigate(ROUTES.SEARCH, { initialQuery: '' });
                     } catch (refError) {
-                      console.error('❌ [HomeScreen] navigationRef also failed:', refError);
+                      if (__DEV__) {
+                        console.error('NavigationRef failed:', refError);
+                      }
                     }
                   }
                   setShowMenu(false);
@@ -713,12 +611,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               ]}
               onPress={() => {
                 try {
-                  console.log('🔄 [HomeScreen] Navigating to MY_COURSES');
                   navigation.navigate(ROUTES.MY_COURSES);
-                  // Close menu after navigation starts
                   setTimeout(() => setShowMenu(false), 100);
                 } catch (navError) {
-                  console.error('❌ [HomeScreen] Navigation error to MY_COURSES:', navError);
+                  if (__DEV__) {
+                    console.error('Navigation error to MY_COURSES:', navError);
+                  }
                   setShowMenu(false);
                 }
               }}
@@ -741,12 +639,12 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
               ]}
               onPress={() => {
                 try {
-                  console.log('🔄 [HomeScreen] Navigating to PROFILE');
                   navigation.navigate(ROUTES.PROFILE);
-                  // Close menu after navigation starts
                   setTimeout(() => setShowMenu(false), 100);
                 } catch (navError) {
-                  console.error('❌ [HomeScreen] Navigation error to PROFILE:', navError);
+                  if (__DEV__) {
+                    console.error('Navigation error to PROFILE:', navError);
+                  }
                   setShowMenu(false);
                 }
               }}
