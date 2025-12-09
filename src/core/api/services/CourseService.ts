@@ -203,8 +203,26 @@ const mapApiCourseToCourse = (apiCourse: ApiCourse): Course => {
   };
 };
 
+// Course Service Type
+interface CourseServiceType {
+  getCourses: (filters?: CourseFilters) => Promise<CoursesResponse>;
+  getTrendingCourses: (limit?: number) => Promise<Course[]>;
+  getPopularCourses: (limit?: number) => Promise<Course[]>;
+  getCourseDetails: (courseId: string) => Promise<CourseDetails>;
+  getCourseLessons: (courseId: string) => Promise<Chapter[]>;
+  getCourseReviews: (courseId: string, page?: number) => Promise<Review[]>;
+  enrollCourse: (courseId: string) => Promise<{ success: boolean; message: string }>;
+  addToHistory: (courseId: string) => Promise<{ success: boolean; message: string }>;
+  getMyCourses: () => Promise<UserCourse[]>;
+  updateProgress: (courseId: string, lessonId: string) => Promise<{ progress: number }>;
+  toggleBookmark: (courseId: string) => Promise<{ isBookmarked: boolean }>;
+  searchCourses: (query: string) => Promise<Course[]>;
+  getCoursesByCategory: (category: string) => Promise<Course[]>;
+  getCategories: () => Promise<{ id: string; name: string; icon: string; coursesCount: number }[]>;
+}
+
 // Course Service
-export const CourseService = {
+export const CourseService: CourseServiceType = {
   /**
    * Get all courses with filters
    */
@@ -529,11 +547,10 @@ export const CourseService = {
     } catch (error: any) {
       if (__DEV__) {
         console.error('Error in searchCourses:', {
-        message: error?.message,
-        code: error?.code,
-        response: error?.response?.data,
-        query,
-      });
+          message: error?.message,
+          code: error?.code,
+        });
+      }
       return [];
     }
   },
@@ -549,7 +566,9 @@ export const CourseService = {
       // apiClient interceptor already extracts data.data, so response.data is SearchResponse
       const apiCourses = response.data?.courses || [];
       if (!Array.isArray(apiCourses)) {
-        console.error('❌ [CourseService] getCoursesByCategory: courses is not an array', apiCourses);
+        if (__DEV__) {
+          console.error('getCoursesByCategory: courses is not an array');
+        }
         return [];
       }
       return apiCourses.map(mapApiCourseToCourse).filter(Boolean);

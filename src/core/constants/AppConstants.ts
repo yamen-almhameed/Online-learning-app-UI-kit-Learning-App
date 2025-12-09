@@ -18,6 +18,9 @@ export const ENDPOINTS = {
   LOGIN: '/auth/login',
   REGISTER: '/auth/register',
   LOGOUT: '/auth/logout',
+  GET_CURRENT_USER: '/auth/me',
+  GOOGLE_LOGIN: '/auth/google',
+  APPLE_LOGIN: '/auth/apple',
   FORGOT_PASSWORD: '/auth/forgot-password',
   RESET_PASSWORD: '/auth/reset-password',
   VERIFY_OTP: '/auth/verify-otp',
@@ -25,10 +28,13 @@ export const ENDPOINTS = {
   SOCIAL_LOGIN: '/auth/social',
   
   // User
-  PROFILE: '/user/profile',
-  UPDATE_PROFILE: '/user/profile/update',
+  PROFILE: '/users/profile',
+  UPDATE_PROFILE: '/users/profile',
   CHANGE_PASSWORD: '/user/change-password',
   DELETE_ACCOUNT: '/user/delete',
+  UPLOAD_PROFILE_PICTURE: '/users/profile/picture',
+  GET_COURSE_HISTORY: '/users/history',
+  ADD_TO_HISTORY: '/users/history/:courseId',
   
   // Courses
   COURSES: '/courses',
@@ -38,7 +44,7 @@ export const ENDPOINTS = {
   COURSE_ENROLL: '/courses/:id/enroll',
   
   // User Courses
-  MY_COURSES: '/user/courses',
+  MY_COURSES: '/courses/my-courses',
   COURSE_PROGRESS: '/user/courses/:id/progress',
   USER_HISTORY: '/users/history/:courseId',
   
