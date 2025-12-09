@@ -1,17 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { View, StyleSheet, Text, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, Text } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { CommonActions } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useAuth } from '../core/hooks/useAuth';
-import { useTheme } from '../core/hooks/useTheme';
-import type { 
-  AuthStackParamList, 
-  HomeStackParamList, 
-  RootStackParamList,
-  TabParamList 
-} from './types';
-
+import { navigationRef } from '../App';
 import SplashScreen from '../features/auth/screens/SplashScreen';
 import LoginScreen from '../features/auth/screens/LoginScreen';
 import SignUpScreen from '../features/auth/screens/SignUpScreen';
@@ -23,12 +16,15 @@ import MyCoursesScreen from '../features/courses/screens/MyCoursesScreen';
 import ProfileScreen from '../features/profile/screens/ProfileScreen';
 import SubscriptionPlansScreen from '../features/payment/screens/SubscriptionPlansScreen';
 import AddPaymentMethodScreen from '../features/payment/screens/AddPaymentMethodScreen';
-
+import { useAuth } from '../core/hooks/useAuth';
+import { useTheme } from '../core/hooks/useTheme';
 export const ROUTES = {
+  // Auth
   SPLASH: 'Splash',
   ONBOARDING: 'Onboarding',
   LOGIN: 'Login',
   SIGN_UP: 'SignUp',
+  // Main
   AUTH: 'Auth',
   MAIN: 'Main',
   HOME: 'Home',
@@ -36,12 +32,9 @@ export const ROUTES = {
   MY_COURSES: 'MyCourses',
   PROFILE: 'Profile',
   COURSE_PLAYER: 'CoursePlayer',
+  // Payment
   SUBSCRIPTION_PLANS: 'SubscriptionPlans',
   ADD_PAYMENT_METHOD: 'AddPaymentMethod',
-  HOME_TAB: 'HomeTab',
-  SEARCH_TAB: 'SearchTab',
-  COURSES_TAB: 'CoursesTab',
-  PROFILE_TAB: 'ProfileTab',
 } as const;
 
 interface NavStateType {
@@ -53,9 +46,7 @@ const NavStateContext = createContext<NavStateType | null>(null);
 
 export const useNavigationState = () => {
   const context = useContext(NavStateContext);
-  if (!context) {
-    throw new Error('useNavigationState must be used within NavigationStateProvider');
-  }
+  if (!context) throw new Error('useNavigationState must be inside Provider');
   return context;
 };
 
@@ -63,11 +54,9 @@ export const NavigationStateProvider: React.FC<{ children: React.ReactNode }> = 
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
 
   useEffect(() => {
-    const checkOnboarding = async () => {
-      const value = await AsyncStorage.getItem('onboarding_completed');
+    AsyncStorage.getItem('onboarding_completed').then(value => {
       setHasCompletedOnboarding(value === 'true');
-    };
-    checkOnboarding();
+    });
   }, []);
 
   const setOnboardingCompleted = async () => {
@@ -82,37 +71,29 @@ export const NavigationStateProvider: React.FC<{ children: React.ReactNode }> = 
   );
 };
 
-const RootStack = createNativeStackNavigator<RootStackParamList>();
-const AuthStack = createNativeStackNavigator<AuthStackParamList>();
-const Tab = createBottomTabNavigator<TabParamList>();
-const HomeStack = createNativeStackNavigator<HomeStackParamList>();
+const RootStack = createNativeStackNavigator();
+const AuthStack = createNativeStackNavigator();
+const Tab = createBottomTabNavigator();
+const HomeStack = createNativeStackNavigator();
 
 const HomeStackNavigator = () => (
   <HomeStack.Navigator screenOptions={{ headerShown: false }}>
     <HomeStack.Screen name={ROUTES.HOME} component={HomeScreen as any} />
     <HomeStack.Screen name={ROUTES.SEARCH} component={SearchScreen as any} />
     <HomeStack.Screen name={ROUTES.COURSE_PLAYER} component={CoursePlayerScreen as any} />
+    <HomeStack.Screen name={ROUTES.MY_COURSES} component={MyCoursesScreen as any} />
+    <HomeStack.Screen name={ROUTES.PROFILE} component={ProfileScreen as any} />
     <HomeStack.Screen name={ROUTES.SUBSCRIPTION_PLANS} component={SubscriptionPlansScreen as any} />
     <HomeStack.Screen name={ROUTES.ADD_PAYMENT_METHOD} component={AddPaymentMethodScreen as any} />
   </HomeStack.Navigator>
 );
 
-const TabIcon = ({ icon, label, focused }: { icon: string; label: string; focused: boolean }) => {
-  const { theme } = useTheme();
-  
-  return (
-    <View style={styles.tabIcon}>
-      <Text style={{ fontSize: 24, opacity: focused ? 1 : 0.5 }}>{icon}</Text>
-      <Text style={{ 
-        fontSize: 10, 
-        color: focused ? theme.colors.primary : '#999', 
-        marginTop: 2 
-      }}>
-        {label}
-      </Text>
-    </View>
-  );
-};
+const TabIcon = ({ icon, label, focused }: { icon: string; label: string; focused: boolean }) => (
+  <View style={styles.tabIcon}>
+    <Text style={{ fontSize: 24, opacity: focused ? 1 : 0.5 }}>{icon}</Text>
+    <Text style={{ fontSize: 10, color: focused ? '#FF6B35' : '#999', marginTop: 2 }}>{label}</Text>
+  </View>
+);
 
 const MainTabs = () => {
   const { theme } = useTheme();
@@ -123,85 +104,132 @@ const MainTabs = () => {
         headerShown: false,
         tabBarShowLabel: false,
         tabBarStyle: {
-          backgroundColor: theme.colors.tabBarBackground || '#FFFFFF',
+          backgroundColor: theme.colors.tabBarBackground,
           height: 70,
           paddingBottom: 10,
-          borderTopWidth: 1,
-          borderTopColor: theme.colors.border || '#E0E0E0',
         },
       }}
     >
       <Tab.Screen
-        name={ROUTES.HOME_TAB}
+        name="HomeTab"
         component={HomeStackNavigator}
-        options={{ 
-          tabBarIcon: ({ focused }) => <TabIcon icon="🏠" label="Home" focused={focused} /> 
-        }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="🏠" label="Home" focused={focused} /> }}
       />
       <Tab.Screen
-        name={ROUTES.SEARCH_TAB}
+        name="SearchTab"
         component={SearchScreen as any}
-        options={{ 
-          tabBarIcon: ({ focused }) => <TabIcon icon="🔍" label="Search" focused={focused} /> 
-        }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="🔍" label="Search" focused={focused} /> }}
       />
       <Tab.Screen
-        name={ROUTES.COURSES_TAB}
+        name="CoursesTab"
         component={MyCoursesScreen as any}
-        options={{ 
-          tabBarIcon: ({ focused }) => <TabIcon icon="📚" label="Courses" focused={focused} /> 
-        }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="📚" label="Courses" focused={focused} /> }}
       />
       <Tab.Screen
-        name={ROUTES.PROFILE_TAB}
+        name="ProfileTab"
         component={ProfileScreen as any}
-        options={{ 
-          tabBarIcon: ({ focused }) => <TabIcon icon="👤" label="Profile" focused={focused} /> 
-        }}
+        options={{ tabBarIcon: ({ focused }) => <TabIcon icon="👤" label="Profile" focused={focused} /> }}
       />
     </Tab.Navigator>
   );
 };
 
+// ============================================
+// 🔐 Auth Navigator (قبل تسجيل الدخول)
+// ============================================
 const AuthNavigator = () => (
   <AuthStack.Navigator
     initialRouteName={ROUTES.SPLASH}
-    screenOptions={{ 
-      headerShown: false, 
-      animation: 'slide_from_right' 
-    }}
+    screenOptions={{ headerShown: false, animation: 'slide_from_right' }}
   >
-    <AuthStack.Screen name={ROUTES.SPLASH} component={SplashScreen as any} />
-    <AuthStack.Screen name={ROUTES.ONBOARDING} component={OnboardingScreen as any} />
-    <AuthStack.Screen name={ROUTES.LOGIN} component={LoginScreen as any} />
-    <AuthStack.Screen name={ROUTES.SIGN_UP} component={SignUpScreen as any} />
+    <AuthStack.Screen name="Splash" component={SplashScreen as any} />
+    <AuthStack.Screen name="Onboarding" component={OnboardingScreen as any} />
+    <AuthStack.Screen name="Login" component={LoginScreen as any} />
+    <AuthStack.Screen name="SignUp" component={SignUpScreen as any} />
   </AuthStack.Navigator>
 );
 
 export const AppRoutes = () => {
   const { isAuthenticated, isLoading } = useAuth();
-  const { theme } = useTheme();
+  const [initialRouteName] = React.useState(() => {
+    const route = isAuthenticated ? ROUTES.MAIN : ROUTES.AUTH;
+    console.log('🔴 [AppRoutes] initialRouteName:', route, 'isAuthenticated:', isAuthenticated);
+    return route;
+  });
+
+  const lastAuthStateRef = React.useRef<boolean | null>(null);
+
+  React.useEffect(() => {
+    console.log('🔴 [AppRoutes] isAuthenticated تغير:', isAuthenticated);
+    console.log('🔴 [AppRoutes] isLoading:', isLoading);
+  }, [isAuthenticated, isLoading]);
+
+  React.useEffect(() => {
+    if (isLoading) {
+      return;
+    }
+
+    // Wait for navigation to be ready
+    const checkNavigationReady = () => {
+      if (!navigationRef.isReady()) {
+        console.log('🔴 [AppRoutes] Navigation ليس جاهز بعد...');
+        // Retry after a short delay
+        setTimeout(checkNavigationReady, 100);
+        return;
+      }
+
+      // Only navigate if auth state actually changed
+      if (lastAuthStateRef.current === isAuthenticated) {
+        return;
+      }
+
+      lastAuthStateRef.current = isAuthenticated;
+
+      try {
+        if (isAuthenticated) {
+          console.log('🔴 [AppRoutes] المستخدم مسجل دخول - الانتقال إلى MAIN');
+          navigationRef.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [{ name: ROUTES.MAIN }],
+            })
+          );
+        } else {
+          console.log('🔴 [AppRoutes] المستخدم غير مسجل دخول - الانتقال إلى AUTH');
+          navigationRef.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [{ name: ROUTES.AUTH }],
+            })
+          );
+        }
+      } catch (error) {
+        console.error('❌ [AppRoutes] Navigation error:', error);
+      }
+    };
+
+    checkNavigationReady();
+  }, [isAuthenticated, isLoading]);
 
   if (isLoading) {
+    console.log('🔴 [AppRoutes] Loading...');
     return (
-      <View style={[styles.loading, { backgroundColor: theme.colors.background }]}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text style={[styles.loadingText, { color: theme.colors.textPrimary }]}>
-          Loading...
-        </Text>
+      <View style={styles.loading}>
+        <Text>Loading...</Text>
       </View>
     );
   }
 
+  console.log('🔴 [AppRoutes] Render - initialRouteName:', initialRouteName);
+
   return (
     <RootStack.Navigator 
+      initialRouteName={initialRouteName}
       screenOptions={{ headerShown: false }}
     >
-      {isAuthenticated ? (
-        <RootStack.Screen name={ROUTES.MAIN} component={MainTabs} />
-      ) : (
-        <RootStack.Screen name={ROUTES.AUTH} component={AuthNavigator} />
-      )}
+      <RootStack.Screen name={ROUTES.AUTH} component={AuthNavigator} />
+      <RootStack.Screen name={ROUTES.MAIN} component={HomeStackNavigator} />
+      {/* Removed duplicate screens - they are already in HomeStackNavigator */}
     </RootStack.Navigator>
   );
 };
@@ -211,10 +239,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
   },
   tabIcon: {
     alignItems: 'center',

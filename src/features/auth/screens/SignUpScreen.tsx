@@ -1,7 +1,6 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, KeyboardAvoidingView, ScrollView, Platform, StatusBar } from 'react-native';
 import { useTheme } from '../../../core/hooks/useTheme';
-import { useAuth } from '../../../core/hooks/useAuth';
 import { SignUpScreenProps } from '../../../navigation/types';
 import { useSignUpController } from '../hooks/useSignUpController';
 import { styles } from './styles/SignUpStyles';
@@ -12,16 +11,14 @@ import SignUpFooter from './components/SignUpFooter';
 
 const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
   const { theme } = useTheme();
-  const { isAuthenticated } = useAuth();
   const controller = useSignUpController();
 
   const goToLogin = () => navigation.navigate('Login');
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      // Navigation handled by AppRoutes
-    }
-  }, [isAuthenticated]);
+  const handleSignUpSuccess = () => {
+    // الانتقال إلى شاشة Login بعد نجاح التسجيل
+    navigation.navigate('Login');
+  };
 
   return (
     <KeyboardAvoidingView
@@ -40,7 +37,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
           <SignUpHeader />
           <SignUpForm controller={controller} />
           <SignUpButton
-            onSignUp={controller.handleSignUp}
+            onSignUp={() => controller.handleSignUp(handleSignUpSuccess)}
             isLoading={controller.isLoading}
           />
         </View>

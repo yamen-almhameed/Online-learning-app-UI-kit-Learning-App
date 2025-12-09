@@ -83,11 +83,8 @@ export const registerAsync = createAsyncThunk(
         throw new Error('Invalid response from server. Missing user or token.');
       }
       
-      // Save to AsyncStorage
-      await AsyncStorage.multiSet([
-        [STORAGE_KEYS.TOKEN, response.token],
-        [STORAGE_KEYS.USER, JSON.stringify(response.user)],
-      ]);
+      // لا نحفظ البيانات في AsyncStorage عند Registration
+      // المستخدم يجب أن يسجل دخول يدوياً بعد إنشاء الحساب
       
       return response;
     } catch (error: any) {
@@ -268,11 +265,10 @@ const authSlice = createSlice({
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(registerAsync.fulfilled, (state, action) => {
+      .addCase(registerAsync.fulfilled, (state) => {
+        // لا نحفظ البيانات في Redux state عند Registration
+        // المستخدم يجب أن يسجل دخول يدوياً بعد إنشاء الحساب
         state.isLoading = false;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
-        state.refreshToken = action.payload.refreshToken || null;
         state.error = null;
       })
       .addCase(registerAsync.rejected, (state, action) => {
